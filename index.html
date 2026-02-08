@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Single Squad: Red Alert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&family=Playfair+Display:italic,wght@1,900&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #020202; overflow: hidden; color: white; font-family: 'Plus Jakarta Sans', sans-serif; touch-action: none; }
+        .font-serif-italic { font-family: 'Playfair Display', serif; font-style: italic; }
+        .vignette { position: fixed; inset: 0; background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.9) 100%); pointer-events: none; z-index: 5; }
+        
+        .outline-text { 
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2); 
+            color: transparent; 
+            transition: all 0.3s ease; 
+        }
+
+        .glass-btn { 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px); 
+        }
+
+        .red-alert {
+            color: #ff0000 !important;
+            text-shadow: 0 0 30px #ff0000, 0 0 60px #7f0000;
+            -webkit-text-stroke: 0px !important;
+            animation: glitch 0.2s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="Sickick Infected مجرد اغنيه.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="vignette"></div>
+
+    <div class="relative z-10 flex flex-col items-center justify-between min-h-screen py-12 px-6 text-center">
+        <div>
+            <h2 class="text-[10px] tracking-[0.6em] uppercase text-red-600 font-bold mb-2 opacity-80">Squad Protocol: Zero Bandi</h2>
+            <h1 id="main-title" class="text-5xl md:text-7xl font-extrabold outline-text leading-none uppercase">
+                Single <br> <span class="text-white font-serif-italic capitalize tracking-normal">Prani</span>
+            </h1>
+        </div>
+
+        <div class="w-full max-w-sm glass-btn p-6 rounded-3xl shadow-2xl">
+            <h3 class="text-pink-500 font-bold mb-4 uppercase tracking-tighter">Target List:</h3>
+            <div class="text-[11px] text-gray-300 space-y-2 mb-6 tracking-widest text-left px-4">
+                <p>1. <span class="text-white font-bold">ANKKU DII</span> (The Boss Girl)</p>
+                <p>2. <span class="text-white font-bold">SHUBHAM</span> (Sakht Launda No. 1)</p>
+                <p>3. <span class="text-white font-bold">TUGGU</span> (Always Confusion Mein)</p>
+            </div>
+            
+            <p class="text-[10px] text-red-500 mb-4 animate-pulse">SABKE SAB SINGLE HAIN BHAI!</p>
+            
+            <button onclick="igniteRed()" id="proposeBtn" class="w-full bg-white text-black py-4 rounded-xl font-black tracking-widest active:scale-95 transition-all duration-300">
+                SCAN SQUAD STATUS
+            </button>
+        </div>
+
+        <div id="final-message" class="opacity-0 transition-all duration-1000 transform translate-y-10 px-4">
+            <p class="font-serif-italic text-2xl text-red-500">SYSTEM HANG! 😂</p>
+            <p class="text-sm text-white mt-2">
+                Ankku Dii, hum dono ka kuch nahi ho sakta... <br> 
+                Shubham aur Tuggu toh bas chai ke sahare hain!
+            </p>
+        </div>
+    </div>
+
+    <div id="canvas-container" class="fixed inset-0 z-0"></div>
+
+    <script>
+        let scene, camera, renderer, starSystem, material;
+        let targetX = 0, targetY = 0;
+        let currentX = 0, currentY = 0;
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+            camera.position.z = 400;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            for (let i = 0; i < 9000; i++) {
+                positions.push((Math.random() - 0.5) * 1000);
+                positions.push((Math.random() - 0.5) * 1000);
+                positions.push((Math.random() - 0.5) * 1000);
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+
+            material = new THREE.PointsMaterial({
+                size: 2.5,
+                color: 0x333333,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending
+            });
+
+            starSystem = new THREE.Points(geometry, material);
+            scene.add(starSystem);
+
+            const handleMove = (x, y) => {
+                targetX = (x - window.innerWidth / 2) * 0.4;
+                targetY = (y - window.innerHeight / 2) * 0.4;
+            };
+            window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+            window.addEventListener('touchmove', (e) => handleMove(e.touches[0].clientX, e.touches[0].clientY));
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            starSystem.rotation.y += 0.001;
+            currentX += (targetX - currentX) * 0.05;
+            currentY += (targetY - currentY) * 0.05;
+            camera.position.x = currentX;
+            camera.position.y = -currentY;
+            camera.lookAt(scene.position);
+            renderer.render(scene, camera);
+        }
+
+        function igniteRed() {
+            const music = document.getElementById('bgMusic');
+            music.play().catch(error => console.log("Audio playback failed:", error));
+
+            material.color.setHex(0xff0000); 
+            material.size = 5;
+            
+            document.getElementById('main-title').classList.add('red-alert');
+            
+            const btn = document.getElementById('proposeBtn');
+            btn.style.background = "#ff0000";
+            btn.style.color = "white";
+            btn.innerHTML = "SAB SINGLE HAIN!";
+            
+            document.getElementById('final-message').style.opacity = "1";
+            document.getElementById('final-message').classList.remove('translate-y-10');
+            
+            if (window.navigator.vibrate) {
+                window.navigator.vibrate([100, 50, 100]);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
